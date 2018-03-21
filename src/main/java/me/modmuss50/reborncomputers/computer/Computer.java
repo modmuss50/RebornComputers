@@ -9,14 +9,19 @@ public class Computer {
 	private final UUID reference;
 	private boolean running = false;
 	//This in done like this to allow for more monitors in the future, but now assume there is one
-	private Monitor[] monitors = new Monitor[] { new Monitor() };
+	private Monitor[] monitors = new Monitor[] { new Monitor(30, 32) };
+
+	public Computer(UUID reference) {
+		this.reference = reference;
+		ComputerManager.computerMap.put(getReference(), this);
+	}
 
 	public Computer(String reference) {
-		this.reference = UUID.fromString(reference);
+		this(UUID.fromString(reference));
 	}
 
 	public Computer() {
-		this(UUID.randomUUID().toString());
+		this(UUID.randomUUID());
 	}
 
 	public int getMonitorCount() {

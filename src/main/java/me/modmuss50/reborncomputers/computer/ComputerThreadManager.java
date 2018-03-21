@@ -12,7 +12,6 @@ public class ComputerThreadManager {
 	private static final String THREAD_PREFIX = "RebornComputers-";
 
 	public static void startComputerThread(Computer computer) {
-
 		if (threadMap.containsKey(computer.getReference())) {
 			destoryThread(computer);
 		}

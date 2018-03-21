@@ -4,7 +4,9 @@ function version(){
 }
 
 function init(id) {
-    print("Starting JSOS " + version() + " on " + id);
+    monitor_clear();
+    printLn("Starting RebornOS " + version() + " on " + id);
+    printLn("Current screen res " + monitor_width() + "x" + monitor_height())
 
     // while(true){
     //     print(id)
