@@ -1,7 +1,10 @@
 package me.modmuss50.reborncomputers.computer;
 
 import me.modmuss50.reborncomputers.RebornComputers;
+import me.modmuss50.reborncomputers.computer.filesystem.FileSystem;
+import net.minecraft.client.Minecraft;
 
+import java.io.File;
 import java.util.UUID;
 
 public class Computer {
@@ -10,10 +13,12 @@ public class Computer {
 	private boolean running = false;
 	//This in done like this to allow for more monitors in the future, but now assume there is one
 	private Monitor[] monitors = new Monitor[] { new Monitor(64, 32) };
+	private FileSystem fileSystem;
 
 	public Computer(UUID reference) {
 		this.reference = reference;
 		ComputerManager.computerMap.put(getReference(), this);
+		this.fileSystem = new FileSystem(new File(Minecraft.getMinecraft().mcDataDir, this.getReference() + ".zip"));
 	}
 
 	public Computer(String reference) {
@@ -67,6 +72,10 @@ public class Computer {
 
 	public Runnable getRunnable() {
 		return this::run;
+	}
+
+	public FileSystem getFileSystem() {
+		return fileSystem;
 	}
 
 	@Override

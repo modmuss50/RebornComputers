@@ -34,7 +34,6 @@ public class ComputerBind {
 	}
 
 	private static Computer getCurrentComputer(){
-		System.out.println(ComputerManager.computerMap);
 		Optional<String> ref = ComputerThreadManager.getComputerOnCurrentThread();
 		if(ref.isPresent() && ComputerManager.computerMap.containsKey(ref.get())){
 			return ComputerManager.computerMap.get(ref.get());
