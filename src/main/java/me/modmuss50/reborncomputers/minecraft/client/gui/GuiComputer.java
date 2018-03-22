@@ -3,11 +3,18 @@ package me.modmuss50.reborncomputers.minecraft.client.gui;
 import me.modmuss50.reborncomputers.computer.Computer;
 import me.modmuss50.reborncomputers.computer.Monitor;
 import me.modmuss50.reborncomputers.minecraft.tile.TileComputer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Slot;
+import org.lwjgl.input.Keyboard;
 import reborncore.client.guibuilder.GuiBuilder;
+
+import java.awt.*;
+import java.io.IOException;
 
 public class GuiComputer extends GuiContainer {
 	GuiBuilder builder = new GuiBuilder(GuiBuilder.defaultTextureSheet);
@@ -47,7 +54,15 @@ public class GuiComputer extends GuiContainer {
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		FontRenderer fontRenderer = this.fontRenderer;
 
-		monitor.walkData(point -> fontRenderer.drawString(monitor.getCharAt(point) + "", guiLeft +  (point.getX() * 6), guiTop + (point.getY() * 7), -1));
+		ScaledResolution res = new ScaledResolution(Minecraft.getMinecraft());
+		int screenWidth = res.getScaledWidth();
+		int screenHeight = res.getScaledHeight();
+
+		drawRect(0, 0, screenWidth, screenHeight, Color.BLACK.getRGB());
+
+		GlStateManager.color(255, 255, 255, 255);
+
+		monitor.walkData(point -> fontRenderer.drawString(monitor.getCharAt(point) + "", 5 +  (point.getX() * 6), 5 + (point.getY() * 7), Color.WHITE.getRGB()));
 	}
 
 	@Override
@@ -57,5 +72,14 @@ public class GuiComputer extends GuiContainer {
 			computer.start();
 		}
 		super.handleMouseClick(slotIn, slotId, mouseButton, type);
+	}
+
+	@Override
+	protected void keyTyped(char typedChar, int keyCode) throws IOException {
+		super.keyTyped(typedChar, keyCode);
+		if(keyCode != Keyboard.KEY_ESCAPE){
+			monitor.keyTyped(typedChar, keyCode);
+		}
+
 	}
 }

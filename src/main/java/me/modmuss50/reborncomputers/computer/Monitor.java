@@ -4,6 +4,7 @@ import me.modmuss50.reborncomputers.util.ByteUtils;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.util.INBTSerializable;
+import org.lwjgl.input.Keyboard;
 
 import javax.vecmath.Point2i;
 import java.util.function.Consumer;
@@ -12,6 +13,9 @@ public class Monitor implements INBTSerializable {
 
 	private int width, height;
 	private char[][] data;
+	private Point2i cursor = new Point2i(0, 0);
+	private boolean waitingOnInput;
+	private String inputBuffer;
 	//private byte[][] colorData = new byte[width][height];
 
 	public Monitor(int width, int height) {
@@ -27,14 +31,21 @@ public class Monitor implements INBTSerializable {
 
 	public void clear() {
 		walkData(pair -> data[pair.getX()][pair.getY()] = ' ');
+		setCursorPos(new Point2i(0, 0));
 	}
 
 	public void print(Object object) {
 		String string = object.toString();
-		//TODO make this not shit, but a cursor pos is need before that can be done
 		for (int i = 0; i < string.length(); i++) {
-			data[i][0] = string.charAt(i);
+			data[cursor.x][cursor.y] = string.charAt(i);
+			cursorRight();
 		}
+		ComputerThreadManager.stall(250);
+	}
+
+	public void printLn(Object object) {
+		print(object);
+		cursorNextLine();
 	}
 
 	public void setData(char cha, Point2i point) {
@@ -43,11 +54,43 @@ public class Monitor implements INBTSerializable {
 		}
 	}
 
-	public char getCharAt(Point2i point){
+	public void setCursorPos(Point2i pos) {
+		cursor = pos;
+	}
+
+	public Point2i getCursorPos() {
+		return cursor;
+	}
+
+	private void cursorRight() {
+		cursor.x++;
+		if (cursor.x == width) {
+			cursor.x = 0;
+			cursorNextLine();
+		}
+	}
+
+	private void cursorNextLine() {
+		cursor.y++;
+		if (cursor.y >= height) {
+			cursor.y = height;
+			scrollMonitor();
+		}
+		cursor.x = 0;
+	}
+
+	private void scrollMonitor() {
+		for (int i = height; i > 1; i -= 1) {
+			data[i-1] = data[i];
+		}
+		data[height] = new char[width];
+	}
+
+	public char getCharAt(Point2i point) {
 		return data[point.getX()][point.getY()];
 	}
 
-	public boolean isCordValid(Point2i point){
+	public boolean isCordValid(Point2i point) {
 		return isCordValid(point.getX(), point.getY());
 	}
 
@@ -59,6 +102,28 @@ public class Monitor implements INBTSerializable {
 			return false;
 		}
 		return true;
+	}
+
+	public void keyTyped(char cha, int keyCode){
+		if(waitingOnInput){
+			if(keyCode == Keyboard.KEY_RETURN){
+				waitingOnInput = false;
+				return;
+			} else {
+				inputBuffer = inputBuffer + cha;
+			}
+		}
+		print(cha);
+	}
+
+	public String waitForLine(){
+		waitingOnInput = true;
+		while(waitingOnInput){
+			//wait till input finished
+		}
+		String buffer = inputBuffer;
+		inputBuffer = "";
+		return buffer;
 	}
 
 	public void walkData(Consumer<Point2i> consumer) {
@@ -93,6 +158,8 @@ public class Monitor implements INBTSerializable {
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		tagCompound.setInteger("width", width);
 		tagCompound.setInteger("height", height);
+		tagCompound.setInteger("cursorx", cursor.x);
+		tagCompound.setInteger("cursory", cursor.y);
 		tagCompound.setByteArray("data", ByteUtils.write(data));
 		return tagCompound;
 	}
@@ -103,5 +170,7 @@ public class Monitor implements INBTSerializable {
 		data = (char[][]) ByteUtils.read(tagCompound.getByteArray("data"));
 		width = tagCompound.getInteger("width");
 		height = tagCompound.getInteger("height");
+		cursor.x = tagCompound.getInteger("cursorx");
+		cursor.y = tagCompound.getInteger("cursory");
 	}
 }

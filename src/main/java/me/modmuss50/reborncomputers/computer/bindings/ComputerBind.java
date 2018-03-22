@@ -10,8 +10,11 @@ import java.util.Optional;
 public class ComputerBind {
 
 	public static void print(Object object){
-		System.out.println(object);
 		getCurrentComputer().getMontior(0).print(object);
+	}
+
+	public static void printLn(Object object){
+		getCurrentComputer().getMontior(0).printLn(object);
 	}
 
 	public static void clear(){
@@ -37,6 +40,10 @@ public class ComputerBind {
 			return ComputerManager.computerMap.get(ref.get());
 		}
 		throw new RuntimeException("Failed to get computer");
+	}
+
+	public static String inputLine(){
+		return getCurrentComputer().getMontior(0).waitForLine();
 	}
 
 }

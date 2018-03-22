@@ -9,7 +9,7 @@ public class Computer {
 	private final UUID reference;
 	private boolean running = false;
 	//This in done like this to allow for more monitors in the future, but now assume there is one
-	private Monitor[] monitors = new Monitor[] { new Monitor(30, 32) };
+	private Monitor[] monitors = new Monitor[] { new Monitor(64, 32) };
 
 	public Computer(UUID reference) {
 		this.reference = reference;

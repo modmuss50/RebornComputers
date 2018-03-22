@@ -5,7 +5,7 @@ function print(data){
 }
 
 function printLn(data){
-    computerBindings.print(data);
+    computerBindings.printLn(data);
 }
 
 function monitor_clear(){
@@ -22,4 +22,8 @@ function monitor_height() {
 
 function monitor_width() {
     return computerBindings.getWidth();
+}
+
+function inputLine(){
+    return computerBindings.inputLine()
 }

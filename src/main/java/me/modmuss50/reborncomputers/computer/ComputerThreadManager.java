@@ -45,4 +45,14 @@ public class ComputerThreadManager {
 		return Optional.empty();
 	}
 
+	public static void stall(long time){
+		if(getComputerOnCurrentThread().isPresent()){
+			try {
+				Thread.sleep(time);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 }
