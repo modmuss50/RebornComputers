@@ -7,19 +7,21 @@ function init(id) {
     monitor_clear();
     printLn("Starting RebornOS " + version() + " on " + id);
     printLn("Current screen res " + monitor_width() + "x" + monitor_height());
+    comandInput();
+}
 
-    var exit = false;
+function comandInput(){
+    print(">");
 
-  //  while (!exit){
-        printLn(">");
-        var input = inputLine();
-        printLn("Echo: " + input);
+    var input = inputLine();
+    printLn("");
+    if(!isBlank(input)){
+        printLn("Command " + input + " not found!");
+    }
 
-        if(input === "exit"){
-            exit = true;
-        }
-    //}
+    comandInput();
+}
 
-    //printLn("Goodbye o/")
-
+function isBlank(str) {
+    return (!str || /^\s*$/.test(str));
 }

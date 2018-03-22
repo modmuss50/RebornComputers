@@ -3,8 +3,8 @@ package me.modmuss50.reborncomputers.computer;
 import me.modmuss50.reborncomputers.util.ByteUtils;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraftforge.common.util.INBTSerializable;
-import org.lwjgl.input.Keyboard;
 
 import javax.vecmath.Point2i;
 import java.util.function.Consumer;
@@ -14,8 +14,8 @@ public class Monitor implements INBTSerializable {
 	private int width, height;
 	private char[][] data;
 	private Point2i cursor = new Point2i(0, 0);
-	private boolean waitingOnInput;
-	private String inputBuffer;
+	private volatile boolean waitingOnInput;
+	private final StringBuilder inputBuffer = new StringBuilder();
 	//private byte[][] colorData = new byte[width][height];
 
 	public Monitor(int width, int height) {
@@ -73,17 +73,26 @@ public class Monitor implements INBTSerializable {
 	private void cursorNextLine() {
 		cursor.y++;
 		if (cursor.y >= height) {
-			cursor.y = height;
+			cursor.y = height - 1;
 			scrollMonitor();
 		}
 		cursor.x = 0;
 	}
 
 	private void scrollMonitor() {
-		for (int i = height; i > 1; i -= 1) {
-			data[i-1] = data[i];
+		try{
+			for (int x = width; x < 0; x--) {
+				for (int y = 0; y < height; y++) {
+					data[x][y] = data[x][y - 1];
+					data[x][y] = ' ';
+				}
+				//data[x] = new char[height];
+			}
+
+		}catch (Exception e){
+			e.printStackTrace();
 		}
-		data[height] = new char[width];
+		cursor.y--;
 	}
 
 	public char getCharAt(Point2i point) {
@@ -104,25 +113,29 @@ public class Monitor implements INBTSerializable {
 		return true;
 	}
 
-	public void keyTyped(char cha, int keyCode){
-		if(waitingOnInput){
-			if(keyCode == Keyboard.KEY_RETURN){
+	public void keyTyped(char cha, int keyCode) {
+		if (waitingOnInput) {
+			if (keyCode == 28) {
 				waitingOnInput = false;
 				return;
 			} else {
-				inputBuffer = inputBuffer + cha;
+				if (ChatAllowedCharacters.isAllowedCharacter(cha)) {
+					inputBuffer.append(cha);
+				}
 			}
+
 		}
 		print(cha);
 	}
 
-	public String waitForLine(){
+	public String waitForLine() {
 		waitingOnInput = true;
-		while(waitingOnInput){
-			//wait till input finished
+		while (waitingOnInput) {
+				//wait till input finished
 		}
-		String buffer = inputBuffer;
-		inputBuffer = "";
+		String buffer = inputBuffer.toString();
+		inputBuffer.setLength(0);
+		waitingOnInput = false;
 		return buffer;
 	}
 

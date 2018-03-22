@@ -76,10 +76,10 @@ public class GuiComputer extends GuiContainer {
 
 	@Override
 	protected void keyTyped(char typedChar, int keyCode) throws IOException {
-		super.keyTyped(typedChar, keyCode);
 		if(keyCode != Keyboard.KEY_ESCAPE){
 			monitor.keyTyped(typedChar, keyCode);
+			return;
 		}
-
+		super.keyTyped(typedChar, keyCode);
 	}
 }
