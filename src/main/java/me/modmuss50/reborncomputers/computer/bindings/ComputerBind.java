@@ -3,8 +3,8 @@ package me.modmuss50.reborncomputers.computer.bindings;
 import me.modmuss50.reborncomputers.computer.Computer;
 import me.modmuss50.reborncomputers.computer.ComputerManager;
 import me.modmuss50.reborncomputers.computer.ComputerThreadManager;
+import me.modmuss50.reborncomputers.util.CharPos;
 
-import javax.vecmath.Point2i;
 import java.util.Optional;
 
 public class ComputerBind {
@@ -21,8 +21,8 @@ public class ComputerBind {
 		getCurrentComputer().getMontior(0).clear();
 	}
 
-	public static void setPoint(char charr, int x, int y){
-		getCurrentComputer().getMontior(0).setData(charr, new Point2i(x, y));
+	public static void setPoint(char charr, int row, int column){
+		getCurrentComputer().getMontior(0).setData(charr, new CharPos(row, column));
 	}
 
 	public static int getHeight(){

@@ -1,19 +1,20 @@
 package me.modmuss50.reborncomputers.computer;
 
 import me.modmuss50.reborncomputers.util.ByteUtils;
+import me.modmuss50.reborncomputers.util.CharPos;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraftforge.common.util.INBTSerializable;
 
-import javax.vecmath.Point2i;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Monitor implements INBTSerializable {
 
 	private int width, height;
 	private char[][] data;
-	private Point2i cursor = new Point2i(0, 0);
+	private CharPos cursor = new CharPos(0, 0);
 	private volatile boolean waitingOnInput;
 	private final StringBuilder inputBuffer = new StringBuilder();
 	//private byte[][] colorData = new byte[width][height];
@@ -21,7 +22,7 @@ public class Monitor implements INBTSerializable {
 	public Monitor(int width, int height) {
 		this.width = width;
 		this.height = height;
-		data = new char[width][height];
+		data = new char[height][width];
 		clear();
 	}
 
@@ -30,17 +31,17 @@ public class Monitor implements INBTSerializable {
 	}
 
 	public void clear() {
-		walkData(pair -> data[pair.getX()][pair.getY()] = ' ');
-		setCursorPos(new Point2i(0, 0));
+		walkData(pair -> data[pair.row][pair.column] = ' ');
+		setCursorPos(new CharPos(0, 0));
 	}
 
 	public void print(Object object) {
 		String string = object.toString();
 		for (int i = 0; i < string.length(); i++) {
-			data[cursor.x][cursor.y] = string.charAt(i);
+			data[cursor.row][cursor.column] = string.charAt(i);
 			cursorRight();
 		}
-		ComputerThreadManager.stall(250);
+		//ComputerThreadManager.stall(250);
 	}
 
 	public void printLn(Object object) {
@@ -48,66 +49,62 @@ public class Monitor implements INBTSerializable {
 		cursorNextLine();
 	}
 
-	public void setData(char cha, Point2i point) {
+	public void setData(char cha, CharPos point) {
 		if (isCordValid(point)) {
-			data[point.getX()][point.getY()] = cha;
+			data[point.row][point.column] = cha;
 		}
 	}
 
-	public void setCursorPos(Point2i pos) {
+	public void setCursorPos(CharPos pos) {
 		cursor = pos;
 	}
 
-	public Point2i getCursorPos() {
+	public CharPos getCursorPos() {
 		return cursor;
 	}
 
 	private void cursorRight() {
-		cursor.x++;
-		if (cursor.x == width) {
-			cursor.x = 0;
+		cursor.column++;
+		if (cursor.column == width) {
+			cursor.column = 0;
 			cursorNextLine();
 		}
 	}
 
 	private void cursorNextLine() {
-		cursor.y++;
-		if (cursor.y >= height) {
-			cursor.y = height - 1;
+		cursor.row++;
+		if (cursor.row >= height) {
+			cursor.row = height - 1;
 			scrollMonitor();
 		}
-		cursor.x = 0;
+		cursor.column = 0;
 	}
 
 	private void scrollMonitor() {
 		try{
-			for (int x = width; x < 0; x--) {
-				for (int y = 0; y < height; y++) {
-					data[x][y] = data[x][y - 1];
-					data[x][y] = ' ';
-				}
-				//data[x] = new char[height];
+			for (int row = 0; row < height -1; row++) {
+				char[] chars = data[row + 1];
+				data[row] = Arrays.copyOf(chars, chars.length);
 			}
-
+			data[height -1] = new char[width];
 		}catch (Exception e){
 			e.printStackTrace();
 		}
-		cursor.y--;
 	}
 
-	public char getCharAt(Point2i point) {
-		return data[point.getX()][point.getY()];
+	public char getCharAt(CharPos point) {
+		return data[point.row][point.column];
 	}
 
-	public boolean isCordValid(Point2i point) {
-		return isCordValid(point.getX(), point.getY());
+	public boolean isCordValid(CharPos point) {
+		return isCordValid(point.row, point.column);
 	}
 
-	public boolean isCordValid(int x, int y) {
-		if (x < 0 || y < 0) {
+	public boolean isCordValid(int row, int column) {
+		if (row < 0 || column < 0) {
 			return false;
 		}
-		if (x > width | y > width) {
+		if (column > width | row > width) {
 			return false;
 		}
 		return true;
@@ -139,12 +136,12 @@ public class Monitor implements INBTSerializable {
 		return buffer;
 	}
 
-	public void walkData(Consumer<Point2i> consumer) {
-		Point2i point = new Point2i();
-		for (int y = 0; y < height; y++) {
-			for (int x = 0; x < width; x++) {
-				point.set(x, y);
-				consumer.accept(point);
+	public void walkData(Consumer<CharPos> consumer) {
+		CharPos charPos = new CharPos();
+		for (int row = 0; row < height; row++) {
+			for (int column = 0; column < width; column++) {
+				charPos.set(row, column);
+				consumer.accept(charPos);
 			}
 		}
 	}
@@ -159,8 +156,8 @@ public class Monitor implements INBTSerializable {
 
 	public void printData() {
 		walkData(pair -> {
-			System.out.print(data[pair.getX()][pair.getY()]);
-			if (pair.getX() == width) {
+			System.out.print(data[pair.row][pair.column]);
+			if (pair.column == width) {
 				System.out.println();
 			}
 		});
@@ -171,8 +168,8 @@ public class Monitor implements INBTSerializable {
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		tagCompound.setInteger("width", width);
 		tagCompound.setInteger("height", height);
-		tagCompound.setInteger("cursorx", cursor.x);
-		tagCompound.setInteger("cursory", cursor.y);
+		tagCompound.setInteger("cursorRow", cursor.row);
+		tagCompound.setInteger("cursorColumn", cursor.column);
 		tagCompound.setByteArray("data", ByteUtils.write(data));
 		return tagCompound;
 	}
@@ -183,7 +180,7 @@ public class Monitor implements INBTSerializable {
 		data = (char[][]) ByteUtils.read(tagCompound.getByteArray("data"));
 		width = tagCompound.getInteger("width");
 		height = tagCompound.getInteger("height");
-		cursor.x = tagCompound.getInteger("cursorx");
-		cursor.y = tagCompound.getInteger("cursory");
+		cursor.row = tagCompound.getInteger("cursorRow");
+		cursor.column = tagCompound.getInteger("cursorColumn");
 	}
 }

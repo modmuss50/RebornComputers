@@ -62,7 +62,7 @@ public class GuiComputer extends GuiContainer {
 
 		GlStateManager.color(255, 255, 255, 255);
 
-		monitor.walkData(point -> fontRenderer.drawString(monitor.getCharAt(point) + "", 5 +  (point.getX() * 6), 5 + (point.getY() * 7), Color.WHITE.getRGB()));
+		monitor.walkData(point -> fontRenderer.drawString(monitor.getCharAt(point) + "", 5 +  (point.column * 6), 5 + (point.row * 7), Color.WHITE.getRGB()));
 	}
 
 	@Override
