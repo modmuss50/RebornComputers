@@ -1,29 +1,29 @@
-var computerBindings = Java.type('me.modmuss50.reborncomputers.computer.bindings.ComputerBind');
+var computerBindings = Packages.me.modmuss50.reborncomputers.computer.bindings.ComputerBind;
 
-function print(data){
+export function Print(data){
     computerBindings.print(data);
 }
 
-function printLn(data){
+export function printLn(data){
     computerBindings.printLn(data);
 }
 
-function monitor_clear(){
+export function Monitor_clear(){
     computerBindings.clear();
 }
 
-function monitor_set(char, x, y) {
+export function monitor_set(char, x, y) {
     computerBindings.setPoint(char, x, y);
 }
 
-function monitor_height() {
+export function monitor_height() {
     return computerBindings.getHeight();
 }
 
-function monitor_width() {
+export function monitor_width() {
     return computerBindings.getWidth();
 }
 
-function inputLine(){
-    return computerBindings.inputLine()
+export function inputLine(){
+    return computerBindings.inputLine();
 }

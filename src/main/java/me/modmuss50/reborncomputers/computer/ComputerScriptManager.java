@@ -1,14 +1,12 @@
 package me.modmuss50.reborncomputers.computer;
 
 import jdk.nashorn.api.scripting.ClassFilter;
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 import me.modmuss50.reborncomputers.RebornComputers;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Script;
+import org.mozilla.javascript.Scriptable;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -47,8 +45,10 @@ public class ComputerScriptManager {
 
 	}
 
-	private final NashornScriptEngineFactory SCRIPT_ENGINE_FACTORY = new NashornScriptEngineFactory();
-	private final ScriptEngine SCRIPT_ENGINE = SCRIPT_ENGINE_FACTORY.getScriptEngine(new Filter());
+	Context cx = Context.enter();
+	Scriptable scope = cx.initStandardObjects();
+	Script initScript;
+
 	private final String reference;
 
 	public ComputerScriptManager(String reference) {
@@ -57,17 +57,21 @@ public class ComputerScriptManager {
 
 	public void bootOperatingSystem() {
 		try {
-			Files.walk(OS_LOCATION.toPath()).forEach(path -> { try {
-				File file = path.toFile();
-				if(!file.isDirectory() && file.getName().endsWith(".js")){
-					SCRIPT_ENGINE.eval(new FileReader(file));
-				}
-				} catch (ScriptException | FileNotFoundException e) {
+			Map<String, Script> scriptMap = new HashMap<>();
+			Files.walk(OS_LOCATION.toPath()).forEach(path -> {
+				try {
+					File file = path.toFile();
+					if(!file.isDirectory() && file.exists()){
+						scriptMap.put(file.getName(), compileFile(file));
+					}
+				} catch (IOException e) {
 					RebornComputers.LOGGER.error("Failed to eval " + path);
 					e.printStackTrace();
 					return;
 				}
 			});
+			initScript = scriptMap.get("init.js");
+			scriptMap.get("require.js").exec(cx, scope);
 		} catch (IOException e) {
 			RebornComputers.LOGGER.error("Failed to pre load OS");
 			e.printStackTrace();
@@ -76,16 +80,19 @@ public class ComputerScriptManager {
 
 		Optional<String> computerRef = ComputerThreadManager.getComputerOnCurrentThread();
 		if (computerRef.isPresent()) {
-			Invocable invocable = (Invocable) SCRIPT_ENGINE;
 			try {
-				invocable.invokeFunction("init", computerRef.get());
-			} catch (ScriptException | NoSuchMethodException e) {
+				initScript.exec(cx, scope);
+			} catch (Exception e) {
 				RebornComputers.LOGGER.error("An expection occured when running OS on " + computerRef.get());
 				e.printStackTrace();
 			}
 		} else {
 			RebornComputers.LOGGER.error("OS can only be started on the main thread!");
 		}
+	}
+
+	private Script compileFile(File file) throws IOException {
+		return cx.compileReader(new FileReader(file), file.getName(), 0, null);
 	}
 
 	private static class Filter implements ClassFilter {
